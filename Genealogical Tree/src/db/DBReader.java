@@ -222,6 +222,8 @@ public class DBReader {
 			String gender = result.getString(4);
 			String residence = result.getString(5);
 			
+			result.close();
+			
 			return new Person(first_name, last_name, age, gender, residence);
 			
 		} catch(SQLException e) {
