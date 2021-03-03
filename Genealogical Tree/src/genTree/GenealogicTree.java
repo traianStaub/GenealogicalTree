@@ -12,7 +12,7 @@ public class GenealogicTree {
 	private Person unknownPerson = new Person("Unknown", "Unknown", 0, "U", "");
 	
 	//stores the (key) arrayList index = (value) Person associations
-	private Hashtable<Integer, Person> indexToPerson;
+	private ArrayList<Person> indexToPerson;
 	private Hashtable<Person, Integer> personToIndex;
 	
 	//stores the connection the person have with one another;
@@ -26,7 +26,7 @@ public class GenealogicTree {
 	private int childrenIndex = 2;
 	
 	public GenealogicTree() {
-		this.indexToPerson = new Hashtable<>();
+		this.indexToPerson = new ArrayList<>();
 		this.personToIndex = new Hashtable<>();
 		this.graph = new ArrayList<>();
 		
@@ -35,66 +35,63 @@ public class GenealogicTree {
 		unknownPersonList.add(null);
 		unknownPersonList.add(null);
 		graph.add(unknownPersonList);
+		indexToPerson.add(unknownPerson);
 	}
 	
 	//addPersons to the graph----------------------
 	public boolean addPerson(Person person, Person father, Person mother) {
 		//checks if there is a person associated with the next index
-		if(indexToPerson.get(graph.size()) != null) {
-			System.out.println("there is a value asociated with the key: " + graph.size());
+
+		if(getIndex(person) != -1) {
+			System.out.println("The person is in the graph already" + person.getName());
 			return false;
-		} else {
-			if(getIndex(person) != -1) {
-				System.out.println("The person is in the graph already" + person.getName());
-				return false;
-			}
-			
-			//adds the person and index to the 2 hashMaps
-			indexToPerson.put(graph.size(), person);
-			personToIndex.put(person, graph.size());
-			
-			//save the index of the current person
-			int currentPerson = graph.size();
-			
-			//add the person to the graph but do not add the connections yet
-			graph.add(new LinkedList<Integer>());
-			
-			//create a reference to the connection list of the person
-			LinkedList<Integer> conections = graph.get(currentPerson);
-			
-			if(father == null) {
-				conections.add(null);
-			} else {
-				//creates the father if it is not in the graph and map with 2 null parents
-				if(getIndex(father) == -1) {
-					addPerson(father);
-				}
-				
-				//adds the child to the father connections;
-				graph.get(getIndex(father)).add(getIndex(person));
-				
-				//add the father to the connections list
-				conections.add(getIndex(father));
-			}
-			
-			if(mother == null) {
-				conections.add(null);
-			} else {
-				//creates the father if it is not in the graph and map with 2 null parents
-				if(getIndex(mother) == -1) {
-					addPerson(mother);
-				}
-				
-				//adds the child to the mother connections;
-				graph.get(getIndex(mother)).add(getIndex(person));
-				
-				//add the mother to the connection list
-				conections.add(getIndex(mother));
-			}
-			
-			return true;
-			
 		}
+		
+		//adds the person and index to the 2 hashMaps
+		indexToPerson.add(person);
+		personToIndex.put(person, graph.size());
+		
+		//save the index of the current person
+		int currentPerson = graph.size();
+		
+		//add the person to the graph but do not add the connections yet
+		graph.add(new LinkedList<Integer>());
+		
+		//create a reference to the connection list of the person
+		LinkedList<Integer> conections = graph.get(currentPerson);
+		
+		if(father == null) {
+			conections.add(null);
+		} else {
+			//creates the father if it is not in the graph and map with 2 null parents
+			if(getIndex(father) == -1) {
+				addPerson(father);
+			}
+			
+			//adds the child to the father connections;
+			graph.get(getIndex(father)).add(getIndex(person));
+			
+			//add the father to the connections list
+			conections.add(getIndex(father));
+		}
+		
+		if(mother == null) {
+			conections.add(null);
+		} else {
+			//creates the father if it is not in the graph and map with 2 null parents
+			if(getIndex(mother) == -1) {
+				addPerson(mother);
+			}
+			
+			//adds the child to the mother connections;
+			graph.get(getIndex(mother)).add(getIndex(person));
+			
+			//add the mother to the connection list
+			conections.add(getIndex(mother));
+		}
+			
+		return true;
+			
 	}
 	
 	public boolean addPerson(Person person) {
@@ -103,13 +100,22 @@ public class GenealogicTree {
 	
 	//retrieve from the maps--------------
 	public Person getPerson(Integer index) {
-		if(index == null)
+		if(index == null) {
+			//System.out.println("the index provided was null");
 			return null;
+		}
+		
+		if(index < 0 || index >= graph.size()) {
+			System.out.println("the index provided: " + index + ". was negative or larger then the graph size");
+			return unknownPerson;
+		}
+		
 		return indexToPerson.get(Integer.valueOf(index));
 	}
 	
 	public int getIndex(Person person) {	
 		Integer index =  personToIndex.get(person);
+		
 		if(index == null) {
 			return -1;
 		} else {
@@ -118,20 +124,31 @@ public class GenealogicTree {
 	}
 	
 	//get parents----------------
+	//by person
 	public ArrayList<Person> getParents(Person person){
-		int index = getIndex(person);
+		int personIndex = getIndex(person);
 		
 		//check if the person is in the graph
-		if(index == -1) {
+		if(personIndex == -1) {
 			System.out.println("the person: " + person.getName() + " is not in the graph");
 			return new ArrayList<Person>();
+		}
+		
+		return getParents(personIndex);
+		
+	}
+	
+	//from a index
+	public ArrayList<Person> getParents(int personIndex){
+		if(personIndex < 0 || personIndex >= graph.size()) {
+			return new ArrayList<>();
 		}
 		
 		ArrayList<Person> parents = new ArrayList<>(2);
 		
 		//get the connections of the person
-		List<Integer> connections = graph.get(index);
-		ListIterator<Integer> it = connections.listIterator();
+		List<Integer> connections = graph.get(personIndex);
+		ListIterator<Integer> it = connections.listIterator(fatherIndex);
 		
 		Integer currentIndex = it.next();
 		
@@ -151,21 +168,29 @@ public class GenealogicTree {
 		}
 		
 		return parents;
-		
 	}
 	
 	//get children-----------------
 	//by person
 	public List<Person> getChildren(Person person){
-		int index = getIndex(person);
+		int personIndex = getIndex(person);
 		
-		if(index == -1) {
+		if(personIndex == -1) {
 			System.out.println("the person: " + person.getName() + " is not in the graph");
 			return new ArrayList<Person>();
 		}
 		
+		return getChildren(personIndex);
+	}
+	
+	//by index
+	public List<Person> getChildren(int personIndex){
+		if(personIndex < 0 || personIndex >= graph.size()) {
+			return new ArrayList<>();
+		}
+		
 		List<Person> children = new ArrayList<Person>();
-		ListIterator<Integer> it = graph.get(index).listIterator(childrenIndex);
+		ListIterator<Integer> it = graph.get(personIndex).listIterator(childrenIndex);
 		while(it.hasNext()) {
 			children.add(getPerson(it.next()));
 		}
@@ -247,6 +272,16 @@ public class GenealogicTree {
 			return  new LinkedList<Person>();
 		}
 		
+		return getSiblings(personIndex);
+		
+	}
+	
+	public List<Person> getSiblings(int personIndex){
+		//checks if the index is valid and in the graph
+		if(personIndex >= graph.size() || personIndex < 0) {
+			return new ArrayList<>();
+		}
+
 		List<Integer> siblings = new ArrayList<>();
 		
 		//get the parents of the person
@@ -283,37 +318,39 @@ public class GenealogicTree {
 			siblingsPersons.add(getPerson(index));
 		}
 		return siblingsPersons;
-		
 	}
 	
 	//searching the tree
 	//Depth-first search method - recursive
-	public boolean searchAncester(Person start, Person ancestor) {
-		Integer startIndex = getIndex(start);
+	public boolean searchDescendent(Person start, Person ancestor) {
 		
 		if(start == null) {
 			return false;
 		} else if(start.equals(ancestor)) {
 			return true;
 		} else {
+			
+			Integer startIndex = getIndex(start);
+			
 			ListIterator<Integer> it = graph.get(startIndex).listIterator(fatherIndex);
 			Integer currentParent = it.next();
-			
+				
 			//searches on the fathers side if it finds it return true
-			if(searchAncester(getPerson(currentParent), ancestor))
+			if(searchDescendent(getPerson(currentParent), ancestor))
 				return true;
 			
 			//searches on the mothers side if it finds it return true
 			currentParent = it.next();
-			if(searchAncester(getPerson(currentParent), ancestor)) {
+			if(searchDescendent(getPerson(currentParent), ancestor)) {
 				return true;
 			}
+				
 			
 			return false;
 		}
 	}
 	
-	public boolean searchDescendent(Person start, Person descendent) {
+	public boolean searchAncester(Person start, Person descendent) {
 		Integer startIndex = getIndex(start);
 		
 		if(start == null) {
@@ -327,7 +364,7 @@ public class GenealogicTree {
 			while(it.hasNext()) {
 				childIndex = it.next();
 				
-				if(searchDescendent(getPerson(childIndex), descendent)) {
+				if(searchAncester(getPerson(childIndex), descendent)) {
 					return true;
 				}
 			}

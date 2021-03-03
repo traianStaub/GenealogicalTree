@@ -56,6 +56,7 @@ public class Person {
 		this.residence = residence;
 	}
 
+	//equals only checks if they have the same name
 	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Person)) {

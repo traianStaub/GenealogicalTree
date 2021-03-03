@@ -15,6 +15,7 @@ public class DBReader {
 	
 	private Connection con;
 	private Statement statement;
+	private Person unknownPerson = new Person("Unknown", "Unknown", 0, "U", "");
 	
 	public DBReader(String databaseName, String username, String password) {
 		String url = "jdbc:mysql://127.0.0.1:3306/" + databaseName;
@@ -90,7 +91,7 @@ public class DBReader {
 					}
 				}
 				
-				System.out.println(query);
+				//System.out.println(query);
 				statement.executeUpdate(query.toString());
 				//the query stringBuilder and the values array will reset themselves because they are created in the loop
 			}
@@ -108,7 +109,7 @@ public class DBReader {
 				+ "FROM person "
 				+ "JOIN gender on person.gender = gender.gender_id "
 				+ "JOIN county on person.residence = county.county_id "
-				+ "ORDER BY person.person_id";
+				+ "ORDER BY person.person_id;";
 		
 		try {
 			ResultSet result = statement.executeQuery(query);
@@ -116,11 +117,11 @@ public class DBReader {
 			while(result.next()){
 				//check if the person id is not the next person
 				int person_id = result.getInt(1);
-				
+
 				if(person_id > famillyTree.getGraphSize()) {
 					System.out.println("index missing " + person_id);
 					return false;
-				} else if(person_id <famillyTree.getGraphSize()) {
+				} else if(person_id < famillyTree.getGraphSize()) {
 					System.out.println("index is in the graph " + person_id);
 					continue;
 				}
@@ -134,7 +135,8 @@ public class DBReader {
 				
 				//adds the person in the family tree
 				famillyTree.addPerson(new Person(first_name, last_name, age, gender, residence));
-				System.out.println(person_id + ": " + first_name + " " + last_name + " in DB || " + famillyTree.getPerson(person_id).getName() + " in graph");
+				//for testing
+				//System.out.println(person_id + ": " + first_name + " " + last_name + " in DB || " + famillyTree.getPerson(person_id).getName() + " in graph");
 			}
 			
 			result.close();
@@ -173,6 +175,8 @@ public class DBReader {
 				if(motherIndex != 0) {
 					famillyTree.connectMotherToChild(motherIndex, childIndex);
 				}
+				
+				//for testing
 				//System.out.println(famillyTree.getPerson(motherIndex));
 				//System.out.println("parents" + famillyTree.getParents(famillyTree.getPerson(childIndex)));
 				//System.out.println("children " + famillyTree.getChildren(famillyTree.getPerson(childIndex)));
@@ -184,7 +188,47 @@ public class DBReader {
 		
 		return true;
 	}
-	
+
+	public Person getPerson(int index) {
+		
+		String query = "SELECT person.first_name, person.last_name, person.age, gender.gender, county.county "
+				+ "FROM person "
+				+ "JOIN gender on person.gender = gender.gender_id "
+				+ "JOIN county on person.residence = county.county_id "
+				+ "WHERE person.person_id = " + index + ";";
+		
+		String maxIdQuery = "SELECT MAX(person_id) FROM person;";
+		
+		try {
+			//get the maximum id from the DB
+			ResultSet maxIdResult = statement.executeQuery(maxIdQuery);
+			maxIdResult.next();
+			int maxId = maxIdResult.getInt(1);
+			maxIdResult.close();
+			
+			if(index > maxId) {
+				System.out.println("the id provided is bigger then the max id in the db " + maxId);
+				return unknownPerson;
+			}
+			
+			
+			ResultSet result = statement.executeQuery(query);
+			result.next();
+			
+			//get the values of the person
+			String first_name = result.getString(1);
+			String last_name = result.getString(2);
+			int age = result.getInt(3);
+			String gender = result.getString(4);
+			String residence = result.getString(5);
+			
+			return new Person(first_name, last_name, age, gender, residence);
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return unknownPerson;
+		}
+	}
 	//closes the connection
 	public void close() {
 		try {
