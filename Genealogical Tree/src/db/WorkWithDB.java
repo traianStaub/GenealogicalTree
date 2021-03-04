@@ -13,29 +13,50 @@ public class WorkWithDB {
 		
 		
 		
-		DBReader reader = new DBReader(db, username, password);
+		DataBase reader = new DataBase(db, username, password);
 		GenealogicTree testing = new GenealogicTree();
 		
-		Person anton = reader.getPerson(14);
+		//Person anton = reader.getPerson(14);
 		Person armand = reader.getPerson(11);
 		Person strabuniAndrei = reader.getPerson(10);
 		Person tataCezar = reader.getPerson(15);
 		Person cezar = reader.getPerson(6);
-		
+		Person tataAndreea = reader.getPerson(19);
+		Person andreea = reader.getPerson(2);
+		Person claudiu = reader.getPerson(8);
+		Person gabriel = reader.getPerson(3);
+		Person mihai = reader.getPerson(4);
+
 		reader.getPersonValues(testing);
 		reader.createConnetions(testing);
+		System.out.println("===========================");
 		
+		
+		System.out.println(testing.getChildren(6));
+		System.out.println(testing.getPerson(0));
+		System.out.println(reader.getSize());
+		
+		
+		/*
 		System.out.println(anton.getName() + " furthers ancesters: " + testing.furthestAncester(anton));
 		System.out.println(armand.getName() + " furthers ancesters: " + testing.furthestAncester(armand));
 		System.out.println(strabuniAndrei.getName() + " furthers descendents: " + testing.furthestDescendent(strabuniAndrei));
 		System.out.println(tataCezar.getName() + " furthers descendents: " + testing.furthestDescendent(tataCezar));
 		System.out.println("-----------------");
-		System.out.println(strabuniAndrei.getName() + " ascenster of " + cezar.getName() + " : " + testing.searchDescendent(cezar, strabuniAndrei));
+
+		System.out.println(strabuniAndrei.getName() + " ancestors of " + cezar.getName() + " : " + testing.searchDescendent(cezar, strabuniAndrei));
 		System.out.println(cezar.getName() + " descended of " + strabuniAndrei.getName() + " : " + testing.searchAncester(strabuniAndrei, cezar));
-		System.out.println(strabuniAndrei.getName() + " ascenster of " + anton.getName() + " : " + testing.searchDescendent(anton, strabuniAndrei));
-		System.out.println(anton.getName() + " descended of " + strabuniAndrei.getName() + " : " + testing.searchAncester(strabuniAndrei, anton));
+
+		System.out.println(cezar.getName() + " descended of " + strabuniAndrei.getName() + " : " + testing.searchAncesterBFS(strabuniAndrei, cezar));
+
+		System.out.println(strabuniAndrei.getName() + " ancestors of " + anton.getName() + " : " + testing.searchDescendent(anton, strabuniAndrei));
+		System.out.println(anton.getName() + " descended of " + strabuniAndrei.getName() + " : " + testing.searchAncester(tataAndreea, anton));
+
+		System.out.println(anton.getName() + " descended of " + strabuniAndrei.getName() + " : " + testing.searchAncesterBFS(tataAndreea, anton));
+
 		
-	
+		System.out.println(testing.isRelated(gabriel, mihai));
+		*/
 		reader.close();
 
 	}
