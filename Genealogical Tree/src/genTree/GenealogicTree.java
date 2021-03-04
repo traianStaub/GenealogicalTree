@@ -34,8 +34,6 @@ public class GenealogicTree {
 		LinkedList<Integer> unknownPersonList = new LinkedList<>();
 		unknownPersonList.add(null);
 		unknownPersonList.add(null);
-		graph.add(unknownPersonList);
-		indexToPerson.add(unknownPerson);
 	}
 	
 	//addPersons to the graph----------------------
@@ -256,7 +254,10 @@ public class GenealogicTree {
 		graph.get(child).set(parentPositionIndex, parent);
 				
 		//add the child to the parent connection list
-		graph.get(parent).add(child);
+		//checks if the child is not already in the list first
+		List<Integer> parentList = graph.get(parent);
+		if(!parentList.contains(child))
+			parentList.add(child);
 				
 		return true;
 	}
@@ -322,26 +323,26 @@ public class GenealogicTree {
 	
 	//searching the tree
 	//Depth-first search method - recursive
-	public boolean searchDescendent(Person start, Person ancestor) {
+	public boolean searchAncester(Person ascendent, Person descendent) {
 		
-		if(start == null) {
+		if(descendent == null) {
 			return false;
-		} else if(start.equals(ancestor)) {
+		} else if(descendent.equals(ascendent)) {
 			return true;
 		} else {
 			
-			Integer startIndex = getIndex(start);
+			Integer startIndex = getIndex(descendent);
 			
 			ListIterator<Integer> it = graph.get(startIndex).listIterator(fatherIndex);
 			Integer currentParent = it.next();
-				
-			//searches on the fathers side if it finds it return true
-			if(searchDescendent(getPerson(currentParent), ancestor))
-				return true;
 			
+			//searches on the fathers side if it finds it return true
+			if(searchAncester(ascendent, getPerson(currentParent)))
+				return true;
+
 			//searches on the mothers side if it finds it return true
 			currentParent = it.next();
-			if(searchDescendent(getPerson(currentParent), ancestor)) {
+			if(searchAncester(ascendent, getPerson(currentParent))) {
 				return true;
 			}
 				
@@ -349,13 +350,13 @@ public class GenealogicTree {
 			return false;
 		}
 	}
-	
-	public boolean searchAncester(Person start, Person descendent) {
-		Integer startIndex = getIndex(start);
+
+	public boolean searchDescendent(Person descendent, Person ascendent) {
+		Integer startIndex = getIndex(ascendent);
 		
-		if(start == null) {
+		if(ascendent == null) {
 			return false;
-		} else if(start.equals(descendent)) {
+		} else if(ascendent.equals(descendent)) {
 			return true;
 		} else {
 			ListIterator<Integer> it = graph.get(startIndex).listIterator(childrenIndex);
@@ -364,7 +365,7 @@ public class GenealogicTree {
 			while(it.hasNext()) {
 				childIndex = it.next();
 				
-				if(searchAncester(getPerson(childIndex), descendent)) {
+				if(searchDescendent(descendent, getPerson(childIndex))) {
 					return true;
 				}
 			}
@@ -373,7 +374,164 @@ public class GenealogicTree {
 		}
 	}
 	
-	//working on
+	public boolean searchAncesterBFS(Person ancester, Person descendent) {	
+		int descendentIndex = getIndex(descendent);
+		int ancesterIndex = getIndex(ancester);
+		
+		//check if the 2 people are in the graph
+		if(descendentIndex == -1) {
+			System.out.println("The first Person: " + descendent.getName() + " is not in the graph");
+			return false;
+		}
+		
+		if(ancesterIndex == -1) {
+			System.out.println("The second Person: " + ancester.getName() + " is not in the graph");
+			return false;
+		}
+		
+		int[] visited = new int[graph.size()];
+		
+		Deque<Integer> toVisit = new LinkedList<>();
+		toVisit.add(descendentIndex);
+		
+		while(!toVisit.isEmpty()) {
+			//current node to visit-
+			int visiting = toVisit.poll();
+			
+			//we have found the person we were searching for
+			if(visiting == ancesterIndex) {
+				return true;
+			}
+			
+			LinkedList<Integer> parents = graph.get(visiting);
+			ListIterator<Integer> it = parents.listIterator(fatherIndex);
+			
+			//father index
+			Integer currentParent = it.next();
+			if(currentParent != null && visited[currentParent] != 1) {
+				toVisit.add(currentParent);
+			}
+
+			//motherIndex
+			currentParent = it.next();
+			if(currentParent != null && visited[currentParent] != 1) {
+				toVisit.add(currentParent);
+			}
+
+			//mark this node as visited
+			visited[visiting] = 1;
+		}
+		
+		return false;
+	}
+	
+	public boolean isRelated(Person start, Person end) {
+		
+		//check if the 2 person are in the graph
+		int startIndex = getIndex(start);
+		if(startIndex == -1) {
+			System.out.println("The first Person: " + start.getName() + " is not in the graph");
+			return false;
+		}
+		
+		int endIndex = getIndex(end);
+		if(endIndex == -1) {
+			System.out.println("The first Person: " + end.getName() + " is not in the graph");
+			return false;
+		}
+		
+		int[] visited = new int[graph.size()];
+		
+		return checkAncesters(startIndex, endIndex, visited);
+	}
+	
+	private boolean checkDescendents(int start, int toCheck, int[] visited) {
+		
+		//if the node has already been checked do not bother
+		if(visited[start] == 1) {
+			return false;
+		}
+		
+		Deque<Integer> toVisit = new LinkedList<>();
+		toVisit.add(start);
+		
+		while(!toVisit.isEmpty()) {
+			int visiting = toVisit.poll();
+			
+			if(visiting == toCheck) {
+				return true;
+			}
+			
+			visited[visiting] = 1;
+			
+			ListIterator<Integer> it = graph.get(visiting).listIterator(childrenIndex);
+			while(it.hasNext()) {
+				Integer currentPerson = it.next();
+				if(currentPerson != null && visited[currentPerson] != 1) {
+					System.out.println(getPerson(currentPerson).getName());
+					toVisit.add(currentPerson);
+				}
+				
+			}
+			
+			
+		}
+		
+		return false;
+	}
+	
+	private boolean checkAncesters(int start, int toCheck, int[] visited) {
+		
+		if(visited[start] == 1) {
+			return false;
+		}
+		
+		Deque<Integer> toVisit = new LinkedList<>();
+		toVisit.add(start);
+		
+		while(!toVisit.isEmpty()) {
+			int visiting = toVisit.pop();
+			
+			if(visiting == toCheck) {
+				return true;
+			}
+			
+			visited[visiting] = 1;
+			
+			ListIterator<Integer> it = graph.get(visiting).listIterator(fatherIndex);
+			//check father and his ancestors and related descendants
+			Integer currentPerson = it.next();
+			if(currentPerson != null && visited[currentPerson] != 1) {
+				System.out.println(getPerson(currentPerson).getName());
+				if(checkAncesters(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			//check mother and hers ancestors and related descendants
+			currentPerson = it.next();
+			if(currentPerson != null && visited[currentPerson] != 1) {
+				System.out.println(getPerson(currentPerson).getName());
+				if(checkAncesters(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			//check children
+			while(it.hasNext()) {
+				currentPerson = it.next();
+				if(checkDescendents(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		return false;
+	}
+	
+	//returns the furthest descendant or ancestor
 	public List<Person> furthestAncester(Person start) {
 		int[] graphArray = new int[graph.size()];
 		int startIndex = getIndex(start);
@@ -485,6 +643,13 @@ public class GenealogicTree {
 		}
 		
 		return furthestDescendent;
+	}
+	
+	//clear all values
+	public void clear() {
+		graph.clear();
+		indexToPerson.clear();
+		personToIndex.clear();
 	}
 	
 	//getters

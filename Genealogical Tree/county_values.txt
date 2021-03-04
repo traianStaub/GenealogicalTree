@@ -1,4 +1,4 @@
-0 'unknown'
+0 'U'
 1 'AB'
 2 'AR'
 3 'B'

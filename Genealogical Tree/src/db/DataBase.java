@@ -11,13 +11,15 @@ import java.util.Scanner;
 import genTree.GenealogicTree;
 import genTree.Person;
 
-public class DBReader {
+public class DataBase {
 	
 	private Connection con;
 	private Statement statement;
 	private Person unknownPerson = new Person("Unknown", "Unknown", 0, "U", "");
 	
-	public DBReader(String databaseName, String username, String password) {
+	private int nextPersonID;
+	
+	public DataBase(String databaseName, String username, String password) {
 		String url = "jdbc:mysql://127.0.0.1:3306/" + databaseName;
 		
 		try {
@@ -29,6 +31,7 @@ public class DBReader {
 		try {
 			con = DriverManager.getConnection(url, username, password);
 			statement = con.createStatement();
+			nextPersonID = 0;
 			
 		}catch(SQLException e) {
 			System.out.print("the connection or the statement could not be initialized");
@@ -47,7 +50,7 @@ public class DBReader {
 	}
 	
 	//fill a database from a file we are assuming the file written in a appropriate manner
-	public void fillDB(String filePath, String table) {
+	public void fillDBFromFile(String filePath, String table) {
 		try {
 			Scanner inputFile = new Scanner(new FileReader (new File(filePath)));
 			
@@ -91,15 +94,55 @@ public class DBReader {
 					}
 				}
 				
-				//System.out.println(query);
+				System.out.println(query);
 				statement.executeUpdate(query.toString());
 				//the query stringBuilder and the values array will reset themselves because they are created in the loop
 			}
+			
+			System.out.println("succes import fromfile " + filePath + " to table: " + table);
 			
 		} catch(IOException e) {
 			e.printStackTrace();
 		} catch(SQLException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	//to do
+	public boolean addPersonToDB(Person newPerson) {
+		
+		try {
+			String prepared = "INSERT INTO person VALUES( ?, ?, ?, ?, ?, ?)";
+			PreparedStatement prepState = con.prepareStatement(prepared);
+			prepState.setInt(1, nextPersonID);
+			prepState.setString(2, newPerson.getFirstName());
+			prepState.setString(2, newPerson.getLastName());
+			prepState.setInt(3, newPerson.getAge());
+			
+			ResultSet gender = statement.executeQuery("SELECT gender_id FROM gender WHERE gender = '" + newPerson.getGender() + "';");
+			gender.next();
+			int genderId = gender.getInt(1);
+			gender.close();
+			
+			//add the gender to the DB
+			prepState.setInt(4, genderId);
+			
+			ResultSet county = statement.executeQuery("SELECT county_id FROM county WHERE county = '" + newPerson.getResidence() + "';");
+			county.next();
+			int countyId = county.getInt(1);
+			county.close();
+			
+			//add the county id to the DB
+			prepState.setInt(5, countyId);
+			
+			prepState.execute();
+			prepState.close();
+			
+			nextPersonID++;
+			return true;
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 	
@@ -109,6 +152,7 @@ public class DBReader {
 				+ "FROM person "
 				+ "JOIN gender on person.gender = gender.gender_id "
 				+ "JOIN county on person.residence = county.county_id "
+				+ "WHERE person.person_id >= " + famillyTree.getGraphSize() + " "
 				+ "ORDER BY person.person_id;";
 		
 		try {
@@ -119,11 +163,9 @@ public class DBReader {
 				int person_id = result.getInt(1);
 
 				if(person_id > famillyTree.getGraphSize()) {
-					System.out.println("index missing " + person_id);
+					System.out.println("index missing " + famillyTree.getGraphSize());
+					famillyTree.clear();
 					return false;
-				} else if(person_id < famillyTree.getGraphSize()) {
-					System.out.println("index is in the graph " + person_id);
-					continue;
 				}
 				
 				//get the values of the person
@@ -135,11 +177,14 @@ public class DBReader {
 				
 				//adds the person in the family tree
 				famillyTree.addPerson(new Person(first_name, last_name, age, gender, residence));
+				nextPersonID++;
 				//for testing
 				//System.out.println(person_id + ": " + first_name + " " + last_name + " in DB || " + famillyTree.getPerson(person_id).getName() + " in graph");
 			}
 			
 			result.close();
+			
+			System.out.println("succes when adding the persons from the DB tot the graph");
 		} catch(SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -151,7 +196,7 @@ public class DBReader {
 	//create the connections that are in he database
 	public boolean createConnetions(GenealogicTree famillyTree) {
 		String query = "Select person_id, father_id, mother_id "
-				+ "FROM person";
+				+ "FROM connections";
 		
 		try{
 			
@@ -181,6 +226,7 @@ public class DBReader {
 				//System.out.println("parents" + famillyTree.getParents(famillyTree.getPerson(childIndex)));
 				//System.out.println("children " + famillyTree.getChildren(famillyTree.getPerson(childIndex)));
 			}
+			System.out.println("Succes when creating the connections from the DB");
 		} catch(SQLException e) {
 			e.printStackTrace();
 			return false;
@@ -231,6 +277,11 @@ public class DBReader {
 			return unknownPerson;
 		}
 	}
+	
+	public int getSize() {
+		return nextPersonID;
+	}
+	
 	//closes the connection
 	public void close() {
 		try {
