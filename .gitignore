@@ -23,7 +23,7 @@
 hs_err_pid*
 
 #files i are not needed
-.gitignore
-.settings
-.classpath
-.project
+Genealogical Tree/.gitignore
+Genealogical Tree/.settings
+Genealogical Tree/.classpath
+Genealogical Tree/.project
