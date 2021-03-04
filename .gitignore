@@ -23,7 +23,7 @@
 hs_err_pid*
 
 #files i are not needed
-!.gitignore
-!.settings
-!.classpath
-!.project
+**.gitignore
+**.settings
+**.classpath
+**.project
