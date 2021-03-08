@@ -1,0 +1,20 @@
+andrei popescu 60 1 5 
+andreea popescu 61 2 5
+gabriel popescu 18 1 1
+mihai popescu 21 1 2
+mihaela popescu 24 2 3
+cezar vlaicu 23 1 3
+adina petrica 26 2 5
+claudiu vlaicu 5 1 3
+daniela vlaicu 7 2 3
+strabunic_andrei popescu 110 1 5
+armand petrica 10 1 5
+daniela vasile 18 2 1
+victor popescu 1 1 1
+anton popescu 2 1 1
+tata_cezar vlaicu 59 1 15
+tata_andrei popescu 90 1 9
+mama_andrei popescu 89 2 9
+mama_andreea victoria 100 2 15
+tata_andreea victoria 101 1 15
+

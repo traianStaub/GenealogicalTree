@@ -83,6 +83,10 @@ public class Person {
 		return firstName + " " + lastName;
 	}
 	
+	public String toStringForFile() {
+		return firstName + "," + lastName + "," + age + "," + gender + "," + residence;
+	}
+	
 	@Override
 	public int hashCode() {
 		StringBuilder sb = new StringBuilder();

@@ -6,9 +6,9 @@ import genTree.Person;
 public class WorkWithDB {
 
 	public static void main(String[] args) {
-		String db = "gentree";
-		String username = "user";
-		String password = "password";
+		String db = "genTree";
+		String username = "";
+		String password = "";
 		
 		
 		
@@ -16,6 +16,12 @@ public class WorkWithDB {
 		DataBase reader = new DataBase(db, username, password);
 		GenealogicTree testing = new GenealogicTree();
 		
+		testing.fillGraph(reader);
+		
+		testing.saveGenTreeTxt("saveFiles/saveGenTree.txt", "saveFiles/saveConnection.txt");
+		
+		
+		/*
 		//Person anton = reader.getPerson(14);
 		Person armand = reader.getPerson(11);
 		Person strabuniAndrei = reader.getPerson(10);
@@ -36,7 +42,7 @@ public class WorkWithDB {
 		System.out.println(testing.getPerson(0));
 		System.out.println(reader.getSize());
 		
-		
+		*/
 		/*
 		System.out.println(anton.getName() + " furthers ancesters: " + testing.furthestAncester(anton));
 		System.out.println(armand.getName() + " furthers ancesters: " + testing.furthestAncester(armand));

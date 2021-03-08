@@ -1,4 +1,7 @@
 package genTree;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Hashtable;
@@ -94,6 +97,13 @@ public class GenealogicTree {
 	
 	public boolean addPerson(Person person) {
 		return addPerson(person, null, null);	
+	}
+	
+	//populate graph from input
+	public boolean fillGraph(IGenTreeInput input) {
+		input.getPersonValues(this);
+		input.createConnetions(this);
+		return false;
 	}
 	
 	//retrieve from the maps--------------
@@ -643,6 +653,47 @@ public class GenealogicTree {
 		}
 		
 		return furthestDescendent;
+	}
+	
+	public boolean saveGenTreeTxt(String personFilePath, String connectionFileName) {
+		try {
+			FileWriter personOutpt = new FileWriter(new  File(personFilePath));
+			for(Person p : indexToPerson) {
+				personOutpt.write(p.toStringForFile() + "\n");
+			}
+			personOutpt.close();
+			System.out.println("succes wirten the person save file");
+			
+			FileWriter connectionOutpt = new FileWriter(new  File(connectionFileName));
+			
+			for(int i = 0, n = graph.size(); i < n; i++) {
+				ListIterator<Integer> it = graph.get(i).listIterator(fatherIndex);
+				StringBuilder sb = new StringBuilder();
+				sb.append(i + ",");
+				Integer fatherIndex = it.next();
+				if(fatherIndex == null) {
+					sb.append(0 + ",");
+				} else {
+					sb.append(fatherIndex + ",");
+				}
+
+				Integer motherIndex = it.next();
+				if(motherIndex == null) {
+					sb.append(0);
+				} else {
+					sb.append(motherIndex);
+				}
+				
+				connectionOutpt.write(sb.toString() + "\n");
+			}
+			
+			connectionOutpt.close();
+			System.out.println("succes wirten the connection save file");
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+		
+		return false;
 	}
 	
 	//clear all values
