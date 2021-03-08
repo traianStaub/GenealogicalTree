@@ -1,6 +1,7 @@
 package db;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
@@ -9,15 +10,16 @@ import java.util.List;
 import java.util.Scanner;
 
 import genTree.GenealogicTree;
+import genTree.IGenTreeInput;
 import genTree.Person;
 
-public class DataBase {
+public class DataBase implements IGenTreeInput{
 	
 	private Connection con;
 	private Statement statement;
-	private Person unknownPerson = new Person("Unknown", "Unknown", 0, "U", "");
+	private Person unknownPerson = new Person("Unknown", "Unknown", 0, "U", "U");
 	
-	private int nextPersonID;
+	private int nextPersonID = 0;
 	
 	public DataBase(String databaseName, String username, String password) {
 		String url = "jdbc:mysql://127.0.0.1:3306/" + databaseName;
@@ -31,7 +33,8 @@ public class DataBase {
 		try {
 			con = DriverManager.getConnection(url, username, password);
 			statement = con.createStatement();
-			nextPersonID = 0;
+			
+			populateDB();
 			
 		}catch(SQLException e) {
 			System.out.print("the connection or the statement could not be initialized");
@@ -49,11 +52,61 @@ public class DataBase {
 		}
 	}
 	
+	private boolean populateDB() {
+		
+		String genderValuesFile = "gender_values.txt";
+		String genderTable = "gender";
+		
+		String countyValuesFile = "county_values.txt";
+		String countyTable = "county";
+		
+		String personValuseFile = "person_values.txt";
+		
+		try {
+			
+			//check the gender table
+			ResultSet resultGender = statement.executeQuery("Select max(gender_id)  From gender;");
+			resultGender.next();
+			if(resultGender.getString(1) == null) {
+				fillTableFromFile(genderValuesFile, genderTable);
+			}
+			resultGender.close();
+			
+			//check the county table
+			ResultSet resultCounty = statement.executeQuery("Select max(county_id)  From county;");
+			resultCounty.next();
+			if(resultCounty.getString(1) == null) {
+				fillTableFromFile(countyValuesFile, countyTable);
+			}
+			resultCounty.close();
+			
+			//check the person table
+			ResultSet resultPerson = statement.executeQuery("Select max(person_id)  From person;");
+			resultPerson.next();
+			if(resultPerson.getString(1) == null) {
+				addPersonToDB(unknownPerson);
+				fillPersonFromFile(personValuseFile);
+			} else {
+				nextPersonID = resultPerson.getInt(1) + 1;
+			}
+			resultPerson.close();
+			
+			//check and add the connections table
+			//TO DO
+			
+			return true;
+			
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	//fill a database from a file we are assuming the file written in a appropriate manner
-	public void fillDBFromFile(String filePath, String table) {
+	private void fillTableFromFile(String filePath, String table) {
 		try {
 			Scanner inputFile = new Scanner(new FileReader (new File(filePath)));
-			
 			
 			//iterates trough the file
 			while(inputFile.hasNext()) {
@@ -102,6 +155,64 @@ public class DataBase {
 			System.out.println("succes import fromfile " + filePath + " to table: " + table);
 			
 		} catch(IOException e) {
+			e.printStackTrace();
+		} catch(SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//fill the person table from the file it is a different method because we insert the person_id
+	private void fillPersonFromFile(String filePath) {
+		try(Scanner inputFile = new Scanner(new FileReader(new File(filePath)))) {
+			
+			while(inputFile.hasNext()) {
+				//the row of values
+				String row = inputFile.nextLine();
+				
+				//where the values will be stored
+				List<String> values = new ArrayList<>();
+				
+				//it builds from chars the value for the cell
+				StringBuilder cellValue = new StringBuilder();
+				
+				//create a string arrayList of the values to be added
+				for(int i = 0 ; i < row.length(); i++) {
+					char c = row.charAt(i);
+					
+					if(c == ' ') {
+						//adds the value as string to the values array and resets the stringBuilder
+						values.add(cellValue.toString());
+						cellValue.setLength(0);
+					} else {
+						cellValue.append(c);
+					}
+				}
+				
+				//one final add when it reaches the end of the row
+				values.add(cellValue.toString());
+				
+				PreparedStatement prepState = con.prepareStatement("INSERT INTO person VALUES (?, ?, ?, ?, ?, ?)");
+				//add the personId
+				prepState.setInt(1, nextPersonID);
+				//add the first_name
+				prepState.setString(2, values.get(0));
+				
+				//add the last_name
+				prepState.setString(3, values.get(1));
+				
+				//add the age
+				prepState.setInt(4, Integer.parseInt(values.get(2)));
+				
+				//add the gender id
+				prepState.setInt(5, Integer.parseInt(values.get(3)));
+				
+				//add the county id
+				prepState.setInt(6, Integer.parseInt(values.get(4)));
+
+				nextPersonID++;
+				prepState.close();
+			}
+		} catch(FileNotFoundException e) {
 			e.printStackTrace();
 		} catch(SQLException e) {
 			e.printStackTrace();
@@ -177,9 +288,8 @@ public class DataBase {
 				
 				//adds the person in the family tree
 				famillyTree.addPerson(new Person(first_name, last_name, age, gender, residence));
-				nextPersonID++;
 				//for testing
-				//System.out.println(person_id + ": " + first_name + " " + last_name + " in DB || " + famillyTree.getPerson(person_id).getName() + " in graph");
+				System.out.println(person_id + ": " + first_name + " " + last_name + " in DB || " + famillyTree.getPerson(person_id).getName() + " in graph");
 			}
 			
 			result.close();
@@ -234,6 +344,7 @@ public class DataBase {
 		
 		return true;
 	}
+	
 
 	public Person getPerson(int index) {
 		
@@ -276,6 +387,13 @@ public class DataBase {
 			e.printStackTrace();
 			return unknownPerson;
 		}
+	}
+	
+	//get data from DB to Graph
+	@Override
+	public boolean fillGenTree() {
+		
+		return false;
 	}
 	
 	public int getSize() {
