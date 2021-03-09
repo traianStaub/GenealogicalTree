@@ -8,9 +8,9 @@ public class Main {
 
 	public static void main(String[] args) {
 		//Db specs
-		String db = "testing";
-		String username = "newuser";
-		String password = "password";
+		String db = "";
+		String username = "";
+		String password = "";
 		
 		//fileReader specs
 		String fileReaderValuesFile = "inputFiles/FileReader_input_files.txt";
