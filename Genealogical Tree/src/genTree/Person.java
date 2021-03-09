@@ -78,13 +78,18 @@ public class Person {
 		return firstName + " " + lastName;
 	}
 	
+	public String getAllValues() {
+		return firstName + " " + lastName + " " + age + " " + gender + " " + residence;
+	}
+	
 	@Override
 	public String toString() {
 		return firstName + " " + lastName;
 	}
 	
+	//String that is the apropriate format to write to a txt file
 	public String toStringForFile() {
-		return firstName + "," + lastName + "," + age + "," + gender + "," + residence;
+		return firstName + ", " + lastName + ", " + age + ", " + gender + ", " + residence;
 	}
 	
 	@Override

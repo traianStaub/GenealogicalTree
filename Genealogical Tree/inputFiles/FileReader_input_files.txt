@@ -1,0 +1,3 @@
+valueType filePath
+personValues, inputFiles/person_values.txt
+connectionValues, inputFiles/connection_values.txt

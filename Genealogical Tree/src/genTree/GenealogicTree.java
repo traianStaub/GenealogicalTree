@@ -28,6 +28,7 @@ public class GenealogicTree {
 	private int motherIndex = 1;
 	private int childrenIndex = 2;
 	
+	//constructor
 	public GenealogicTree() {
 		this.indexToPerson = new ArrayList<>();
 		this.personToIndex = new Hashtable<>();
@@ -100,10 +101,13 @@ public class GenealogicTree {
 	}
 	
 	//populate graph from input
-	public boolean fillGraph(IGenTreeInput input) {
-		input.getPersonValues(this);
-		input.createConnetions(this);
-		return false;
+	public boolean populateGenTree(IGenTreeInput input) {
+		if(input == null) {
+			addPerson(unknownPerson);
+			return false;
+		}
+		
+		return input.populateGenTree(this);
 	}
 	
 	//retrieve from the maps--------------
@@ -129,6 +133,66 @@ public class GenealogicTree {
 		} else {
 			return index;
 		}
+	}
+	
+	//getPersons by: -----------------------------------
+	//by names
+	public List<Person> getPersonsByLastName(String lastName){
+		ICriteriumMethod critMethod = (p, criterium) -> (criterium.equals(p.getLastName()));
+		
+		//get personByCriterium willCheck if the lastName is null
+		return getPersonByCriterium(lastName, critMethod);
+	}
+	
+	public List<Person> getPersonsByFirstName (String firstName){
+		ICriteriumMethod critMethod = (p, criterium) -> (criterium.equals(p.getFirstName()));
+		
+		//get personByCriterium willCheck if the lastName is null
+		return getPersonByCriterium(firstName, critMethod);
+	}
+	
+	public List<Person> getPersonsByFullName(String firstName, String lastName){
+		String fullName = firstName + lastName;
+		ICriteriumMethod critMethod = (p, criterium) -> {
+				String pFullName = p.getFirstName() + p.getLastName();
+				return criterium.equals(pFullName);
+			};
+		
+		//get personByCriterium willCheck if the lastName is null
+		return getPersonByCriterium(fullName, critMethod);				
+	}
+	
+	//by age
+	public List<Person> getPersonsByAge(int age){
+		String ageString = String.valueOf(age);
+		ICriteriumMethod critMethod = (p, criterium) -> (criterium.equals(String.valueOf(p.getAge())));
+		
+		//get personByCriterium willCheck if the lastName is null
+		return getPersonByCriterium(ageString, critMethod);
+	}
+	
+	//it can be made to return a list of persons by any combination of fields of the Person Class
+	
+	//interface usedBy getPersonByCriterium
+	private interface ICriteriumMethod {
+		boolean comparing(Person p, String criterium);
+	}
+		
+	//main method that is used by the other methods
+	private List<Person> getPersonByCriterium(String criterium, ICriteriumMethod criteriumMethod){
+		List<Person> matches = new ArrayList<>();
+		
+		if(criterium == null) {
+			return matches;
+		}
+		
+		for(Person p : indexToPerson) {
+			if(criteriumMethod.comparing(p, criterium)) {
+				matches.add(p);
+			}
+		}
+		
+		return matches;
 	}
 	
 	//get parents----------------
@@ -205,7 +269,8 @@ public class GenealogicTree {
 		return children;
 	}
 
-	//create connection
+	//create connections---------------
+	//create connection with Person object
 	public boolean connectFatherToChild(Person father, Person child) {
 		return createConnection(father, child, fatherIndex);
 	}
@@ -330,8 +395,118 @@ public class GenealogicTree {
 		}
 		return siblingsPersons;
 	}
+
+	//check Related-----------------
+	//check if 2 people are related
+	public boolean isRelated(Person start, Person end) {
+		
+		//check if the 2 person are in the graph
+		int startIndex = getIndex(start);
+		if(startIndex == -1) {
+			System.out.println("The first Person: " + start.getName() + " is not in the graph");
+			return false;
+		}
+		
+		int endIndex = getIndex(end);
+		if(endIndex == -1) {
+			System.out.println("The first Person: " + end.getName() + " is not in the graph");
+			return false;
+		}
+		
+		int[] visited = new int[graph.size()];
+		
+		return checkAncesters(startIndex, endIndex, visited);
+	}
 	
-	//searching the tree
+	//checks the descendens of a person for the isRelated method
+	private boolean checkDescendents(int start, int toCheck, int[] visited) {
+		
+		//if the node has already been checked do not bother
+		if(visited[start] == 1) {
+			return false;
+		}
+		
+		Deque<Integer> toVisit = new LinkedList<>();
+		toVisit.add(start);
+		
+		while(!toVisit.isEmpty()) {
+			int visiting = toVisit.poll();
+			
+			if(visiting == toCheck) {
+				return true;
+			}
+			
+			visited[visiting] = 1;
+			
+			ListIterator<Integer> it = graph.get(visiting).listIterator(childrenIndex);
+			while(it.hasNext()) {
+				Integer currentPerson = it.next();
+				if(currentPerson != null && visited[currentPerson] != 1) {
+					System.out.println(getPerson(currentPerson).getName());
+					toVisit.add(currentPerson);
+				}
+				
+			}
+			
+			
+		}
+		
+		return false;
+	}
+	
+	//checks the ancesters and the descendens of a person for the isRelated method
+	private boolean checkAncesters(int start, int toCheck, int[] visited) {
+		
+		if(visited[start] == 1) {
+			return false;
+		}
+		
+		Deque<Integer> toVisit = new LinkedList<>();
+		toVisit.add(start);
+		
+		while(!toVisit.isEmpty()) {
+			int visiting = toVisit.pop();
+			
+			if(visiting == toCheck) {
+				return true;
+			}
+			
+			visited[visiting] = 1;
+			
+			ListIterator<Integer> it = graph.get(visiting).listIterator(fatherIndex);
+			//check father and his ancestors and related descendants
+			Integer currentPerson = it.next();
+			if(currentPerson != null && visited[currentPerson] != 1) {
+				System.out.println(getPerson(currentPerson).getName());
+				if(checkAncesters(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			//check mother and hers ancestors and related descendants
+			currentPerson = it.next();
+			if(currentPerson != null && visited[currentPerson] != 1) {
+				System.out.println(getPerson(currentPerson).getName());
+				if(checkAncesters(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			//check children
+			while(it.hasNext()) {
+				currentPerson = it.next();
+				if(checkDescendents(currentPerson, toCheck, visited)) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		return false;
+	}
+	
+	//searching the tree------------------
 	//Depth-first search method - recursive
 	public boolean searchAncester(Person ascendent, Person descendent) {
 		
@@ -434,113 +609,8 @@ public class GenealogicTree {
 		
 		return false;
 	}
-	
-	public boolean isRelated(Person start, Person end) {
-		
-		//check if the 2 person are in the graph
-		int startIndex = getIndex(start);
-		if(startIndex == -1) {
-			System.out.println("The first Person: " + start.getName() + " is not in the graph");
-			return false;
-		}
-		
-		int endIndex = getIndex(end);
-		if(endIndex == -1) {
-			System.out.println("The first Person: " + end.getName() + " is not in the graph");
-			return false;
-		}
-		
-		int[] visited = new int[graph.size()];
-		
-		return checkAncesters(startIndex, endIndex, visited);
-	}
-	
-	private boolean checkDescendents(int start, int toCheck, int[] visited) {
-		
-		//if the node has already been checked do not bother
-		if(visited[start] == 1) {
-			return false;
-		}
-		
-		Deque<Integer> toVisit = new LinkedList<>();
-		toVisit.add(start);
-		
-		while(!toVisit.isEmpty()) {
-			int visiting = toVisit.poll();
-			
-			if(visiting == toCheck) {
-				return true;
-			}
-			
-			visited[visiting] = 1;
-			
-			ListIterator<Integer> it = graph.get(visiting).listIterator(childrenIndex);
-			while(it.hasNext()) {
-				Integer currentPerson = it.next();
-				if(currentPerson != null && visited[currentPerson] != 1) {
-					System.out.println(getPerson(currentPerson).getName());
-					toVisit.add(currentPerson);
-				}
-				
-			}
-			
-			
-		}
-		
-		return false;
-	}
-	
-	private boolean checkAncesters(int start, int toCheck, int[] visited) {
-		
-		if(visited[start] == 1) {
-			return false;
-		}
-		
-		Deque<Integer> toVisit = new LinkedList<>();
-		toVisit.add(start);
-		
-		while(!toVisit.isEmpty()) {
-			int visiting = toVisit.pop();
-			
-			if(visiting == toCheck) {
-				return true;
-			}
-			
-			visited[visiting] = 1;
-			
-			ListIterator<Integer> it = graph.get(visiting).listIterator(fatherIndex);
-			//check father and his ancestors and related descendants
-			Integer currentPerson = it.next();
-			if(currentPerson != null && visited[currentPerson] != 1) {
-				System.out.println(getPerson(currentPerson).getName());
-				if(checkAncesters(currentPerson, toCheck, visited)) {
-					return true;
-				}
-			}
-			
-			//check mother and hers ancestors and related descendants
-			currentPerson = it.next();
-			if(currentPerson != null && visited[currentPerson] != 1) {
-				System.out.println(getPerson(currentPerson).getName());
-				if(checkAncesters(currentPerson, toCheck, visited)) {
-					return true;
-				}
-			}
-			
-			//check children
-			while(it.hasNext()) {
-				currentPerson = it.next();
-				if(checkDescendents(currentPerson, toCheck, visited)) {
-					return true;
-				}
-			}
-			
-			return false;
-		}
-		
-		return false;
-	}
-	
+
+	//longest connection-----------------
 	//returns the furthest descendant or ancestor
 	public List<Person> furthestAncester(Person start) {
 		int[] graphArray = new int[graph.size()];
@@ -655,26 +725,35 @@ public class GenealogicTree {
 		return furthestDescendent;
 	}
 	
+	//save-----------------
+	//save the GenealogicTree to a txtFile
 	public boolean saveGenTreeTxt(String personFilePath, String connectionFileName) {
-		try {
-			FileWriter personOutpt = new FileWriter(new  File(personFilePath));
-			for(Person p : indexToPerson) {
-				personOutpt.write(p.toStringForFile() + "\n");
+		
+		try (FileWriter personOutpt = new FileWriter(new  File(personFilePath))){
+			;
+			for(int i = 1, n = indexToPerson.size(); i < n; i++) {
+				personOutpt.write(indexToPerson.get(i).toStringForFile() + "\n");
 			}
 			personOutpt.close();
-			System.out.println("succes wirten the person save file");
 			
-			FileWriter connectionOutpt = new FileWriter(new  File(connectionFileName));
+			System.out.println("Succes when writting the person save file");
+		} catch(IOException e) {
+			System.out.println("FAIL when writting the person save file");
+			e.printStackTrace();
+		}
+		
+		try (FileWriter connectionOutpt = new FileWriter(new  File(connectionFileName));) {
 			
-			for(int i = 0, n = graph.size(); i < n; i++) {
+			String valuesBreak = ", ";
+			for(int i = 1, n = graph.size(); i < n; i++) {
 				ListIterator<Integer> it = graph.get(i).listIterator(fatherIndex);
 				StringBuilder sb = new StringBuilder();
-				sb.append(i + ",");
+				sb.append(i + valuesBreak);
 				Integer fatherIndex = it.next();
 				if(fatherIndex == null) {
-					sb.append(0 + ",");
+					sb.append(0 + valuesBreak);
 				} else {
-					sb.append(fatherIndex + ",");
+					sb.append(fatherIndex + valuesBreak);
 				}
 
 				Integer motherIndex = it.next();
@@ -688,12 +767,24 @@ public class GenealogicTree {
 			}
 			
 			connectionOutpt.close();
-			System.out.println("succes wirten the connection save file");
+			System.out.println("Succes when writting the connection save file");
 		}catch(IOException e){
-			e.printStackTrace();
+			System.out.println("FAIL when writting the connection save file");
+			//e.printStackTrace();
 		}
 		
 		return false;
+	}
+	
+	//update----
+	//update input values
+	public boolean updateValues(IGenTreeInput input) {
+		if(input.updateValues(this) == false) {
+			return false;
+		}
+		
+		System.out.println("Succes updating the values");
+		return true;
 	}
 	
 	//clear all values
@@ -707,4 +798,6 @@ public class GenealogicTree {
 	public int getGraphSize() {
 		return graph.size();
 	}
+
+	
 }

@@ -1,3 +1,5 @@
-gender gender_values.txt 
-county county_values.txt
-person person_values.txt
+tableName, idCollumnName, valueFilePath, createTableFilePath
+gender, gender_id, inputFiles/gender_values.txt, SQL/createGenderTable.txt
+county, county_id, inputFiles/county_values.txt, SQL/createCountyTable.txt
+person, person_id, inputFiles/person_values.txt, SQL/createPersonTable.txt
+connections, person_id, inputFiles/connection_values.txt, SQL/createConnectionsTable.txt

@@ -1,20 +1,19 @@
-unknown,unknown,0,U,U
-andrei,popescu,60,M,CS
-andreea,popescu,61,F,CS
-gabriel,popescu,18,M,AB
-mihai,popescu,21,M,AR
-mihaela,popescu,24,F,B
-cezar,vlaicu,23,M,B
-adina,petrica,26,F,CS
-claudiu,vlaicu,5,M,B
-daniela,vlaicu,7,F,B
-strabunic_andrei,popescu,110,M,CS
-armand,petrica,10,M,CS
-daniela,vasile,18,F,AB
-victor,popescu,1,M,AB
-anton,popescu,2,M,AB
-tata_cezar,vlaicu,59,M,OT
-tata_andrei,popescu,90,M,HD
-mama_andrei,popescu,89,F,HD
-mama_andreea,victoria,100,F,OT
-tata-andreea,victoria,101,M,OT
+andrei, popescu, 60, M, CS
+andreea, popescu, 61, F, CS
+gabriel, popescu, 18, M, AB
+mihai, popescu, 21, M, AR
+mihaela, popescu, 24, F, B
+cezar, vlaicu, 23, M, B
+adina, petrica, 26, F, CS
+claudiu, vlaicu, 5, M, B
+daniela, vlaicu, 7, F, B
+strabunic_andrei, popescu, 110, M, CS
+armand, petrica, 10, M, CS
+daniela, vasile, 18, F, AB
+victor, popescu, 1, M, AB
+anton, popescu, 2, M, AB
+tata_cezar, vlaicu, 59, M, OT
+tata_andrei, popescu, 90, M, HD
+mama_andrei, popescu, 89, F, HD
+mama_andreea, victoria, 100, F, OT
+tata_andreea, victoria, 101, M, OT
