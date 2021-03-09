@@ -1,0 +1,5 @@
+CREATE TABLE county (
+county_id INT,
+county VARCHAR(20),
+PRIMARY KEY (county_id)
+);

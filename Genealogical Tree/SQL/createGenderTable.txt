@@ -1,0 +1,5 @@
+CREATE TABLE gender(
+gender_id INT,
+gender VARCHAR(20),
+PRIMARY KEY (gender_id)
+);

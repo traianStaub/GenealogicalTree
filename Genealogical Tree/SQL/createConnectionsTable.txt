@@ -1,0 +1,8 @@
+CREATE TABLE connections (
+person_id INT NOT NULL UNIQUE,
+father_id INT,
+mother_id INT,
+FOREIGN KEY(person_id) REFERENCES person(person_id),
+FOREIGN KEY(father_id) REFERENCES person(person_id),
+FOREIGN KEY(mother_id) REFERENCES person(person_id)
+);

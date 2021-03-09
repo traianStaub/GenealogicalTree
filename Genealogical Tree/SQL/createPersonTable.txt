@@ -1,0 +1,11 @@
+CREATE TABLE person(
+person_id int,
+first_name VARCHAR(25),
+last_name VARCHAR(25),
+age INT,
+gender INT,
+residence INT,
+PRIMARY KEY(person_id),
+FOREIGN KEY(gender) REFERENCES gender(gender_id),
+FOREIGN KEY(residence) REFERENCES county(county_id)
+);
